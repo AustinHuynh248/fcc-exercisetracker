@@ -1,66 +1,45 @@
 const mongoose = require("mongoose");
 
 const exerciseSchema = new mongoose.Schema({
-  username: {
+  userId: {
     type: String,
-    require: true,
   },
-  count: {
+  description: {
+    type: String,
+  },
+  duration: {
     type: Number,
   },
-  log: [
-    {
-      description: {
-        type: String,
-      },
-      duration: {
-        type: Number,
-      },
-      date: {
-        type: Date,
-      },
-    },
-  ],
+  date: {
+    type: Date,
+  },
 });
 
 const exerciseLog = mongoose.model("ExerciseLog", exerciseSchema);
 
-const createANewUser = async (name) => {
-  const newUser = await exerciseLog.create({ username: name });
-  return newUser;
+const findLogsByUserId = async (id) => {
+  const exerciseLog = await exerciseLog.find({ userId: id });
+  return exerciseLog;
 };
 
-const findUserById = async (id) => {
-  const exerciseLogId = await exerciseLog.findById(id);
-  return exerciseLogId;
+const findLogsByDateRange = async (id, from = false, to = false, limit = 0) => {
+  const condition = { userId: id };
+  if (from || to) condition.date = {};
+  if (from) condition.date.$gte = from;
+  if (to) condition.date.$lt = to;
+
+  const logs = await exerciseLog.find(condition).limit(limit).exec();
+
+  return logs;
 };
 
-// Use elemMatch to query array values or dot operation
-const findUserByCondition = async (id) => {
-  // Ex:
-  // log: { $elemMatch: { date: { $gte: "2022-09-01" } } },
-  const exerciseLogId = await exerciseLog.findOne({
-    _id: id,
-  });
-  return exerciseLogId;
-};
-
-const getAllUser = async () => {
-  const users = await exerciseLog.find({}).select({ username: 1 }).exec();
-  return users;
-};
-
-const updateUserExerciseLog = async (id, data) => {
-  const newUpdateData = await exerciseLog.findOneAndUpdate({ _id: id }, data, {
-    new: true,
-  });
+const createNewExerciseLog = async (data) => {
+  const newUpdateData = await exerciseLog.create(data);
   return newUpdateData;
 };
 
 module.exports = {
-  createANewUser,
-  findUserById,
-  findUserByCondition,
-  updateUserExerciseLog,
-  getAllUser,
+  createNewExerciseLog,
+  findLogsByUserId,
+  findLogsByDateRange,
 };
